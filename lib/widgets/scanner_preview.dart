@@ -68,8 +68,8 @@ class _ScannerPreviewState extends State<ScannerPreview>
   @override
   Widget build(BuildContext context) {
     final cameraAspectRatio = widget.controller.value.aspectRatio;
-    final scanWidth = 100.0 * cameraAspectRatio;
-    const scanHeight = 100.0;
+    final scanWidth = 200.0 * cameraAspectRatio;
+    const scanHeight = 200.0;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
@@ -87,43 +87,42 @@ class _ScannerPreviewState extends State<ScannerPreview>
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: FittedBox(
-                  fit: BoxFit.cover,
-                  alignment: Alignment.center,
-                  child: SizedBox(
-                    width: scanWidth,
-                    height: scanHeight,
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
+                child: SizedBox(
+                  height: scanHeight,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: SizedBox(
+                                  width: scanWidth,
+                                  height: scanHeight,
                           child: CameraPreview(widget.controller),
                         ),
-                        AnimatedBuilder(
-                          animation: _scanLineAnimation,
-                          builder: (context, child) {
-                            return Positioned(
-                              top: _scanLineAnimation.value * (scanHeight - 2),
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                height: 2,
-                                margin:
-                                    const EdgeInsets.symmetric(horizontal: 20),
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Colors.transparent,
-                                      Color(0xFF3498DB),
-                                      Colors.transparent,
-                                    ],
-                                  ),
+                      ),
+                      AnimatedBuilder(
+                        animation: _scanLineAnimation,
+                        builder: (context, child) {
+                          return Positioned(
+                            top: _scanLineAnimation.value * (scanHeight - 2),
+                            left: 0,
+                            right: 0,
+                            child: Container(
+                              height: 2,
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Colors.transparent,
+                                    Color(0xFF3498DB),
+                                    Colors.transparent,
+                                  ],
                                 ),
                               ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),
