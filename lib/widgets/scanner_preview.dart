@@ -92,9 +92,8 @@ class _ScannerPreviewState extends State<ScannerPreview>
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: SizedBox(
-                                  width: scanWidth,
-                                  height: scanHeight,
+                        child: AspectRatio(
+                          aspectRatio: widget.controller.value.aspectRatio,
                           child: CameraPreview(widget.controller),
                         ),
                       ),
