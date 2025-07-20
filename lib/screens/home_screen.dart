@@ -40,11 +40,12 @@ class HomeScreen extends HookWidget {
     }
 
     Future<void> processScannedText(String text) async {
-      // Improved pattern matching for Tanzanian vouchers
+      // Clean up text by removing extra spaces
+      final cleanedText = text.replaceAll(RegExp(r'\s+'), ' ');
+
+      // Patterns for different Tanzanian voucher formats
       final patterns = [
-        // Matches *104*<digits># pattern
-        RegExp(r'\*104\*(\d{12,16})\#'),
-        // Matches groups of 4-5 digits separated by spaces
+        RegExp(r'\*104\*(\d+)\#'), // Direct USSD code with digits
         RegExp(r'(\d{4}\s\d{4}\s\d{4}\s?\d{0,4})'), // Yas, Vodacom
         RegExp(r'(\d{5}\s\d{5}\s\d{4})'), // Airtel
         RegExp(r'(\d{4}\s\d{5}\s\d{4})'), // Halotel
@@ -53,7 +54,7 @@ class HomeScreen extends HookWidget {
       String? extractedVoucher;
 
       for (final pattern in patterns) {
-        final match = pattern.firstMatch(text.replaceAll(RegExp(r'\s+'), ''));
+        final match = pattern.firstMatch(cleanedText);
         if (match != null) {
           extractedVoucher = match.group(1)?.replaceAll(RegExp(r'\s+'), '');
           if (extractedVoucher != null &&

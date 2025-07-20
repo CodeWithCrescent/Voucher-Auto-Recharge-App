@@ -19,10 +19,10 @@ class OcrService {
       
       // Check for Tanzanian voucher patterns
       final voucherPatterns = [
-        RegExp(r'(\d{4}\s?\d{4}\s?\d{4}\s?\d{0,4})'), // xxxx xxxx xxxx xxx (Yas, Vodacom)
-        RegExp(r'(\d{5}\s?\d{5}\s?\d{4})'),           // xxxxx xxxxx xxxx (Airtel)
-        RegExp(r'(\d{4}\s?\d{5}\s?\d{4})'),           // xxxx xxxxx xxxx (Halotel)
-        // RegExp(r'(\d{12,16})')                         // continuous digits
+        RegExp(r'\*104\*(\d+)\#'), // Direct USSD code with digits
+        RegExp(r'(\d{4}\s\d{4}\s\d{4}\s?\d{0,4})'), // Yas, Vodacom
+        RegExp(r'(\d{5}\s\d{5}\s\d{4})'), // Airtel
+        RegExp(r'(\d{4}\s\d{5}\s\d{4})'), // Halotel
       ];
       
       for (final pattern in voucherPatterns) {
