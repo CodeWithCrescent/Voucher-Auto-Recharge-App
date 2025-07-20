@@ -230,7 +230,8 @@ class _ScannerPreviewState extends State<_ScannerPreview> {
           style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
         Container(
-          height: 120,
+          height: 100,
+          width: double.infinity,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.blue, width: 2),
             borderRadius: BorderRadius.circular(8),
