@@ -39,12 +39,33 @@ class HomeScreen extends HookWidget {
     }
 
     Future<void> processScannedText(String text) async {
-      // Extract voucher number after *104* pattern
-      final regex = RegExp(r'(?:\*104\*|\b)(\d{12,16})(?:\#|\b)');
-      final match = regex.firstMatch(text);
+      // Improved pattern matching for Tanzanian vouchers
+      final patterns = [
+        // Matches *104*<digits># pattern
+        RegExp(r'\*104\*(\d{12,16})\#'),
+        // Matches groups of 4-5 digits separated by spaces
+        RegExp(r'(\d{4}\s\d{4}\s\d{4}\s?\d{0,4})'), // Yas, Vodacom
+        RegExp(r'(\d{5}\s\d{5}\s\d{4})'), // Airtel
+        RegExp(r'(\d{4}\s\d{5}\s\d{4})'), // Halotel
+        // RegExp(r'(\d{12,16})'),
+      ];
 
-      if (match != null) {
-        voucherController.text = match.group(1)!;
+      String? extractedVoucher;
+      
+      for (final pattern in patterns) {
+        final match = pattern.firstMatch(text.replaceAll(RegExp(r'\s+'), ''));
+        if (match != null) {
+          extractedVoucher = match.group(1)?.replaceAll(RegExp(r'\s+'), '');
+          if (extractedVoucher != null && 
+              extractedVoucher.length >= 12 && 
+              extractedVoucher.length <= 16) {
+            break;
+          }
+        }
+      }
+
+      if (extractedVoucher != null) {
+        voucherController.text = extractedVoucher;
         showScanner.value = false;
         cameraController.value?.dispose();
         cameraController.value = null;
@@ -202,20 +223,9 @@ class _ScannerPreviewState extends State<_ScannerPreview> {
       final inputImage = InputImage.fromFilePath(image.path);
       final recognizedText = await textRecognizer.processImage(inputImage);
 
-      // Look for voucher pattern *104*<digits>#
-      final voucherPattern = RegExp(r'\*104\*\d{12,16}\#');
-      final match = voucherPattern.firstMatch(recognizedText.text);
-
-      if (match != null) {
-        widget.onTextDetected(match.group(0)!);
-      } else {
-        // If no *104* pattern found, look for standalone 12-16 digit numbers
-        final digitPattern = RegExp(r'\b\d{12,16}\b');
-        final digitMatch = digitPattern.firstMatch(recognizedText.text);
-        if (digitMatch != null) {
-          widget.onTextDetected(digitMatch.group(0)!);
-        }
-      }
+      // Improved text processing with multiple patterns
+      final text = recognizedText.text.replaceAll(RegExp(r'[^0-9\s\*#]'), '');
+      widget.onTextDetected(text);
     } catch (e) {
       widget.onClose();
     } finally {

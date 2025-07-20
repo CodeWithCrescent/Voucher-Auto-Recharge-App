@@ -9,15 +9,33 @@ class OcrService {
       final inputImage = InputImage.fromFilePath(image.path);
       final recognizedText = await textRecognizer.processImage(inputImage);
       
-      // First try to find *104*<digits># pattern
-      final voucherPattern = RegExp(r'\*104\*\d{12,16}\#');
-      final match = voucherPattern.firstMatch(recognizedText.text);
-      if (match != null) return match.group(0);
+      // Clean the text by removing non-digit characters (except * and #)
+      final cleanText = recognizedText.text.replaceAll(RegExp(r'[^0-9\s\*#]'), '');
       
-      // If not found, look for standalone 12-16 digit numbers
-      final digitPattern = RegExp(r'\b\d{12,16}\b');
-      final digitMatch = digitPattern.firstMatch(recognizedText.text);
-      return digitMatch?.group(0);
+      // Check for *104* pattern first
+      final ussdPattern = RegExp(r'\*104\*(\d{12,16})\#');
+      final ussdMatch = ussdPattern.firstMatch(cleanText);
+      if (ussdMatch != null) return ussdMatch.group(1);
+      
+      // Check for Tanzanian voucher patterns
+      final voucherPatterns = [
+        RegExp(r'(\d{4}\s?\d{4}\s?\d{4}\s?\d{0,4})'), // xxxx xxxx xxxx xxx (Yas, Vodacom)
+        RegExp(r'(\d{5}\s?\d{5}\s?\d{4})'),           // xxxxx xxxxx xxxx (Airtel)
+        RegExp(r'(\d{4}\s?\d{5}\s?\d{4})'),           // xxxx xxxxx xxxx (Halotel)
+        // RegExp(r'(\d{12,16})')                         // continuous digits
+      ];
+      
+      for (final pattern in voucherPatterns) {
+        final match = pattern.firstMatch(cleanText);
+        if (match != null) {
+          final digits = match.group(1)?.replaceAll(RegExp(r'\s+'), '');
+          if (digits != null && digits.length >= 12 && digits.length <= 16) {
+            return digits;
+          }
+        }
+      }
+      
+      return null;
     } catch (e) {
       throw Exception('OCR processing error: $e');
     }
