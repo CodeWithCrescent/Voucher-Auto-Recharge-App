@@ -69,7 +69,7 @@ class _ScannerPreviewState extends State<ScannerPreview>
   Widget build(BuildContext context) {
     final cameraAspectRatio = widget.controller.value.aspectRatio;
     final scanWidth = 200 * cameraAspectRatio;
-    final scanHeight = 200 * cameraAspectRatio;
+    const scanHeight = 75.0;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
@@ -85,8 +85,8 @@ class _ScannerPreviewState extends State<ScannerPreview>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                height: 75,
+              SizedBox(
+                height: scanHeight,
                 width: double.infinity,
                 // decoration: BoxDecoration(
                 //   border: Border.all(color: Colors.blue, width: 2),
@@ -193,10 +193,7 @@ class _ScannerPreviewState extends State<ScannerPreview>
                       height: 56,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [
-                            Color(0xFF3498DB),
-                            Color(0xFF2C3E50),
-                          ],
+                          colors: [Color(0xFF3498DB), Color(0xFF2980B9)],
                         ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
