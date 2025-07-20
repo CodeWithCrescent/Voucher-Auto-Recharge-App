@@ -225,7 +225,6 @@ class _ScannerPreviewState extends State<_ScannerPreview> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
     final cameraAspectRatio = widget.controller.value.aspectRatio;
 
     return Column(
@@ -236,7 +235,7 @@ class _ScannerPreviewState extends State<_ScannerPreview> {
         ),
         const SizedBox(height: 10),
         Container(
-          height: 100,
+          height: 80,
           width: double.infinity,
           decoration: BoxDecoration(
             border: Border.all(color: Colors.blue, width: 2),
@@ -249,7 +248,7 @@ class _ScannerPreviewState extends State<_ScannerPreview> {
               alignment: Alignment.center,
               child: SizedBox(
                 width: 100 * cameraAspectRatio, // maintain aspect
-                height: 100,
+                height: 100 * cameraAspectRatio,
                 child: CameraPreview(widget.controller),
               ),
             ),
