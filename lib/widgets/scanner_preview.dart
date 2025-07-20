@@ -8,7 +8,8 @@ class ScannerPreview extends StatefulWidget {
   final Function(String) onTextDetected;
   final VoidCallback onClose;
 
-  const ScannerPreview({super.key, 
+  const ScannerPreview({
+    super.key,
     required this.controller,
     required this.onTextDetected,
     required this.onClose,
@@ -31,7 +32,6 @@ class _ScannerPreviewState extends State<ScannerPreview> {
   Future<void> _processCameraImage() async {
     if (isProcessing) return;
     isProcessing = true;
-
     try {
       final image = await widget.controller.takePicture();
       final inputImage = InputImage.fromFilePath(image.path);
@@ -48,17 +48,34 @@ class _ScannerPreviewState extends State<ScannerPreview> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
     return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Text(l10n.alignVoucher),
+            Text(
+              l10n.alignVoucher,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
             const SizedBox(height: 16),
-            AspectRatio(
-              aspectRatio: widget.controller.value.aspectRatio,
-              child: CameraPreview(widget.controller),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF3498DB), width: 2),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: AspectRatio(
+                  aspectRatio: widget.controller.value.aspectRatio,
+                  child: CameraPreview(widget.controller),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             Row(
@@ -66,11 +83,25 @@ class _ScannerPreviewState extends State<ScannerPreview> {
               children: [
                 OutlinedButton(
                   onPressed: widget.onClose,
-                  child: const Icon(Icons.close),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    side: const BorderSide(color: Color(0xFFE74C3C)),
+                  ),
+                  child: const Icon(Icons.close, color: Color(0xFFE74C3C)),
                 ),
                 ElevatedButton(
                   onPressed: _processCameraImage,
-                  child: const Icon(Icons.camera_alt),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3498DB),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Icon(Icons.camera_alt, color: Colors.white),
                 ),
               ],
             ),
