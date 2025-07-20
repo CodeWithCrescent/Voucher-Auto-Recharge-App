@@ -88,10 +88,10 @@ class _ScannerPreviewState extends State<ScannerPreview>
               Container(
                 height: 75,
                 width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.blue, width: 2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
+                // decoration: BoxDecoration(
+                //   border: Border.all(color: Colors.blue, width: 2),
+                //   borderRadius: BorderRadius.circular(18),
+                // ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(16),
                   child: FittedBox(
@@ -124,6 +124,7 @@ class _ScannerPreviewState extends State<ScannerPreview>
                                     gradient: LinearGradient(
                                       colors: [
                                         Colors.transparent,
+                                        Color(0xFF3498DB),
                                         Color(0xFF3498DB),
                                         Colors.transparent,
                                       ],
