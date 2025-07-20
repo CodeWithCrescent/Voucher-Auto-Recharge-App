@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:tz_voucher_recharge/services/ussd_service.dart';
@@ -28,12 +29,12 @@ class HomeScreen extends HookWidget {
 
     Future<void> startScanning() async {
       try {
-        isLoading.value = true;
+        // isLoading.value = true;
         errorMessage.value = null;
         await initCamera();
         showScanner.value = true;
       } catch (e) {
-        isLoading.value = false;
+        // isLoading.value = false;
         errorMessage.value = 'Failed to initialize camera: $e';
       }
     }
@@ -42,7 +43,7 @@ class HomeScreen extends HookWidget {
       // Improved pattern matching for Tanzanian vouchers
       final patterns = [
         // Matches *104*<digits># pattern
-        // RegExp(r'\*104\*(\d{12,16})\#'),
+        RegExp(r'\*104\*(\d{12,16})\#'),
         // Matches groups of 4-5 digits separated by spaces
         RegExp(r'(\d{4}\s\d{4}\s\d{4}\s?\d{0,4})'), // Yas, Vodacom
         RegExp(r'(\d{5}\s\d{5}\s\d{4})'), // Airtel
@@ -50,13 +51,13 @@ class HomeScreen extends HookWidget {
       ];
 
       String? extractedVoucher;
-      
+
       for (final pattern in patterns) {
         final match = pattern.firstMatch(text.replaceAll(RegExp(r'\s+'), ''));
         if (match != null) {
           extractedVoucher = match.group(1)?.replaceAll(RegExp(r'\s+'), '');
-          if (extractedVoucher != null && 
-              extractedVoucher.length >= 12 && 
+          if (extractedVoucher != null &&
+              extractedVoucher.length >= 12 &&
               extractedVoucher.length <= 16) {
             break;
           }
@@ -99,6 +100,7 @@ class HomeScreen extends HookWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
       appBar: AppBar(
+        systemOverlayStyle: SystemUiOverlayStyle.dark,
         title: const Text('Voucher Recharge'),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -124,7 +126,8 @@ class HomeScreen extends HookWidget {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.15),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -188,7 +191,10 @@ class HomeScreen extends HookWidget {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .secondary
+                                .withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
@@ -200,9 +206,10 @@ class HomeScreen extends HookWidget {
                         const SizedBox(width: 12),
                         Text(
                           'Voucher Details',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                         ),
                       ],
                     ),
@@ -216,7 +223,10 @@ class HomeScreen extends HookWidget {
                           margin: const EdgeInsets.all(12),
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
@@ -272,7 +282,8 @@ class HomeScreen extends HookWidget {
                       ),
                       label: const Text('Scan'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.secondary,
+                        backgroundColor:
+                            Theme.of(context).colorScheme.secondary,
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                       ),
@@ -289,12 +300,18 @@ class HomeScreen extends HookWidget {
                       gradient: LinearGradient(
                         colors: [
                           Theme.of(context).colorScheme.primary,
-                          Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                          Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.8),
                         ],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.3),
                           blurRadius: 15,
                           offset: const Offset(0, 6),
                         ),
@@ -389,18 +406,18 @@ class HomeScreen extends HookWidget {
               child: Column(
                 children: [
                   Text(
-                    'Developed by Crescent Sambila',
+                    'Developed by CodeWithCrescent',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'Version 1.0.5',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey[500],
-                    ),
+                          color: Colors.grey[500],
+                        ),
                   ),
                 ],
               ),
@@ -471,7 +488,10 @@ class _ScannerPreviewState extends State<_ScannerPreview> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .secondary
+                        .withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -494,7 +514,7 @@ class _ScannerPreviewState extends State<_ScannerPreview> {
             ),
             const SizedBox(height: 20),
             Container(
-              height: 120,
+              height: 80,
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
@@ -516,8 +536,8 @@ class _ScannerPreviewState extends State<_ScannerPreview> {
                   fit: BoxFit.cover,
                   alignment: Alignment.center,
                   child: SizedBox(
-                    width: 200 * cameraAspectRatio,
-                    height: 200,
+                    width: 100 * cameraAspectRatio,
+                    height: 250,
                     child: CameraPreview(widget.controller),
                   ),
                 ),
@@ -546,7 +566,10 @@ class _ScannerPreviewState extends State<_ScannerPreview> {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .secondary
+                            .withOpacity(0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
