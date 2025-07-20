@@ -108,35 +108,29 @@ class _ScannerPreviewState extends State<ScannerPreview>
                               child: CameraPreview(widget.controller),
                             ),
                           ),
-                          LayoutBuilder(
-                            builder: (context, constraints) {
-                              final visibleHeight = constraints.maxHeight;
-
-                              return AnimatedBuilder(
-                                animation: _scanLineAnimation,
-                                builder: (context, child) {
-                                  return Positioned(
-                                    top: _scanLineAnimation.value *
-                                        (visibleHeight - 2),
-                                    left: 0,
-                                    right: 0,
-                                    child: Container(
-                                      height: 2,
-                                      margin: const EdgeInsets.symmetric(
-                                          horizontal: 20),
-                                      decoration: const BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Colors.transparent,
-                                            Color(0xFF3498DB),
-                                            Color(0xFF3498DB),
-                                            Colors.transparent,
-                                          ],
-                                        ),
-                                      ),
+                          AnimatedBuilder(
+                            animation: _scanLineAnimation,
+                            builder: (context, child) {
+                              return Positioned(
+                                top:
+                                    _scanLineAnimation.value * (scanHeight - (scanHeight - 75)),
+                                left: 0,
+                                right: 0,
+                                child: Container(
+                                  height: 2,
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 20),
+                                  decoration: const BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        Colors.transparent,
+                                        Color(0xFF3498DB),
+                                        Color(0xFF3498DB),
+                                        Colors.transparent,
+                                      ],
                                     ),
-                                  );
-                                },
+                                  ),
+                                ),
                               );
                             },
                           ),
