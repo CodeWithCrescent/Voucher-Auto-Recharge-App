@@ -67,7 +67,9 @@ class _ScannerPreviewState extends State<ScannerPreview>
 
   @override
   Widget build(BuildContext context) {
-    const scanHeight = 200.0;
+    final cameraAspectRatio = widget.controller.value.aspectRatio;
+    final scanWidth = 100.0 * cameraAspectRatio;
+    const scanHeight = 100.0;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(20),
@@ -83,41 +85,45 @@ class _ScannerPreviewState extends State<ScannerPreview>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Camera Preview with minimal overlay
               ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: SizedBox(
-                  height: scanHeight,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: CameraPreview(widget.controller),
-                      ),
-                      AnimatedBuilder(
-                        animation: _scanLineAnimation,
-                        builder: (context, child) {
-                          return Positioned(
-                            top: _scanLineAnimation.value * (scanHeight - 2),
-                            left: 0,
-                            right: 0,
-                            child: Container(
-                              height: 2,
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.transparent,
-                                    Colors.cyanAccent.withOpacity(0.7),
-                                    Colors.transparent,
-                                  ],
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  alignment: Alignment.center,
+                  child: SizedBox(
+                    width: scanWidth,
+                    height: scanHeight,
+                    child: Stack(
+                      children: [
+                        Positioned.fill(
+                          child: CameraPreview(widget.controller),
+                        ),
+                        AnimatedBuilder(
+                          animation: _scanLineAnimation,
+                          builder: (context, child) {
+                            return Positioned(
+                              top: _scanLineAnimation.value * (scanHeight - 2),
+                              left: 0,
+                              right: 0,
+                              child: Container(
+                                height: 2,
+                                margin:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                decoration: const BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.transparent,
+                                      Color(0xFF3498DB),
+                                      Colors.transparent,
+                                    ],
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -128,40 +134,105 @@ class _ScannerPreviewState extends State<ScannerPreview>
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: widget.onClose,
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.grey.shade500,
-                        side: BorderSide(color: Colors.grey.shade300),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.grey.shade300,
+                          width: 2,
                         ),
                       ),
-                      child: const Text('Cancel'),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: widget.onClose,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.close_rounded,
+                                  color: Colors.grey.shade600,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Cancel',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
-                    child: ElevatedButton(
-                      onPressed: isProcessing ? null : _processCameraImage,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.cyan.shade700,
-                        foregroundColor: Colors.white,
-                        elevation: 4,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      height: 56,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [
+                            Color(0xFF3498DB),
+                            Color(0xFF2C3E50),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF3498DB).withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: isProcessing ? null : _processCameraImage,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (isProcessing)
+                                  const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                else
+                                  const Icon(
+                                    Icons.camera_alt_rounded,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  isProcessing ? 'Scanning...' : 'Capture',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                      child: isProcessing
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text('Capture'),
                     ),
                   ),
                 ],
