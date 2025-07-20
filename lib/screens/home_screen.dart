@@ -1,7 +1,7 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
-import 'package:tz_voucher_recharge/services/ocr_service.dart';
+import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:tz_voucher_recharge/services/ussd_service.dart';
 
 class HomeScreen extends HookWidget {
@@ -10,102 +10,66 @@ class HomeScreen extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final voucherController = useTextEditingController();
-    final selectedNetwork = useState<String?>(null);
     final isLoading = useState(false);
-    final showCamera = useState(false);
+    final showScanner = useState(false);
     final cameraController = useState<CameraController?>(null);
-    final scannedText = useState<String?>(null);
-
-    final networks = [
-      'Vodacom',
-      'Tigo',
-      'Airtel',
-      'Halotel',
-      'TTCL',
-      'Zantel',
-    ];
+    final errorMessage = useState<String?>(null);
 
     Future<void> initCamera() async {
       final cameras = await availableCameras();
       final controller = CameraController(
         cameras.first,
-        ResolutionPreset.medium,
+        ResolutionPreset.high,
+        enableAudio: false,
       );
       await controller.initialize();
       cameraController.value = controller;
     }
 
-    Future<void> scanVoucher() async {
-      final messenger = ScaffoldMessenger.of(context);
+    Future<void> startScanning() async {
       try {
         isLoading.value = true;
+        errorMessage.value = null;
         await initCamera();
-        showCamera.value = true;
+        showScanner.value = true;
       } catch (e) {
         isLoading.value = false;
-        messenger.showSnackBar(
-          SnackBar(content: Text('Failed to initialize camera: $e')),
-        );
+        errorMessage.value = 'Failed to initialize camera: $e';
       }
     }
 
-    Future<void> processImage(XFile image) async {
-      final messenger = ScaffoldMessenger.of(context);
-      try {
-        final text = await OcrService.processImage(image);
-        if (text != null) {
-          // Extract voucher number (12-16 digits)
-          final regex = RegExp(r'\b\d{12,16}\b');
-          final match = regex.firstMatch(text);
-
-          if (match != null) {
-            voucherController.text = match.group(0)!;
-            scannedText.value = match.group(0);
-            showCamera.value = false;
-            cameraController.value?.dispose();
-            cameraController.value = null;
-          } else {
-            messenger.showSnackBar(
-              const SnackBar(
-                  content: Text(
-                      'No valid voucher number found. Please try again or enter manually.')),
-            );
-          }
-        }
-      } catch (e) {
-        messenger.showSnackBar(
-          SnackBar(content: Text('OCR processing failed: $e')),
-        );
-      } finally {
-        isLoading.value = false;
+    Future<void> processScannedText(String text) async {
+      // Extract voucher number after *104* pattern
+      final regex = RegExp(r'(?:\*104\*|\b)(\d{12,16})(?:\#|\b)');
+      final match = regex.firstMatch(text);
+      
+      if (match != null) {
+        voucherController.text = match.group(1)!;
+        showScanner.value = false;
+        cameraController.value?.dispose();
+        cameraController.value = null;
+      } else {
+        errorMessage.value = 'No valid voucher found. Please try again.';
       }
     }
 
     Future<void> recharge() async {
-      final messenger = ScaffoldMessenger.of(context);
       if (voucherController.text.isEmpty) {
-        messenger.showSnackBar(
-          const SnackBar(
-              content: Text('Please enter or scan a voucher number')),
-        );
+        errorMessage.value = 'Please enter or scan a voucher number';
         return;
       }
 
-      if (voucherController.text.length < 12 ||
-          voucherController.text.length > 16) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Voucher number must be 12-16 digits')),
-        );
+      if (voucherController.text.length < 12 || voucherController.text.length > 16) {
+        errorMessage.value = 'Voucher must be 12-16 digits';
         return;
       }
 
       try {
         isLoading.value = true;
         await UssdService.rechargeVoucher(voucherController.text);
+        errorMessage.value = null;
       } catch (e) {
-        messenger.showSnackBar(
-          SnackBar(content: Text('Failed to initiate recharge: $e')),
-        );
+        errorMessage.value = 'Recharge failed: $e';
       } finally {
         isLoading.value = false;
       }
@@ -113,158 +77,183 @@ class HomeScreen extends HookWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('TZ Voucher Recharge'),
+        title: const Text('Voucher Recharge'),
         centerTitle: true,
+        elevation: 0,
       ),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 20),
-                TextField(
-                  controller: voucherController,
-                  decoration: const InputDecoration(
-                    labelText: 'Voucher Number',
-                    border: OutlineInputBorder(),
-                    hintText: 'Enter 12-16 digit voucher number',
-                  ),
-                  keyboardType: TextInputType.number,
-                  maxLength: 16,
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Voucher Input Field
+            TextField(
+              controller: voucherController,
+              decoration: InputDecoration(
+                labelText: 'Voucher Number',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.confirmation_number),
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () => voucherController.clear(),
                 ),
-                const SizedBox(height: 10),
-                Row(
+              ),
+              keyboardType: TextInputType.number,
+              maxLength: 16,
+            ),
+            const SizedBox(height: 20),
+
+            // Scan Button
+            ElevatedButton.icon(
+              icon: const Icon(Icons.camera_alt),
+              label: const Text('Scan Voucher'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              onPressed: isLoading.value ? null : startScanning,
+            ),
+            const SizedBox(height: 20),
+
+            // Recharge Button
+            ElevatedButton(
+              onPressed: isLoading.value ? null : recharge,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: Theme.of(context).colorScheme.primary,
+              ),
+              child: isLoading.value
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text('Recharge Now', style: TextStyle(fontSize: 16)),
+            ),
+            const SizedBox(height: 20),
+
+            // Error Message
+            if (errorMessage.value != null)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
                   children: [
+                    const Icon(Icons.error, color: Colors.red),
+                    const SizedBox(width: 8),
                     Expanded(
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.camera_alt),
-                        label: const Text('Scan Voucher'),
-                        onPressed: isLoading.value ? null : scanVoucher,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: isLoading.value
-                            ? null
-                            : () => voucherController.clear(),
-                        child: const Text('Clear'),
+                      child: Text(
+                        errorMessage.value!,
+                        style: const TextStyle(color: Colors.red),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                DropdownButtonFormField<String>(
-                  value: selectedNetwork.value,
-                  decoration: const InputDecoration(
-                    labelText: 'Select Network (Optional)',
-                    border: OutlineInputBorder(),
-                  ),
-                  items: networks.map((network) {
-                    return DropdownMenuItem(
-                      value: network,
-                      child: Text(network),
-                    );
-                  }).toList(),
-                  onChanged: (value) => selectedNetwork.value = value,
-                  hint: const Text('Select your network'),
-                ),
-                const SizedBox(height: 30),
-                ElevatedButton(
-                  onPressed: isLoading.value ? null : recharge,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: isLoading.value
-                      ? const CircularProgressIndicator()
-                      : const Text('Recharge', style: TextStyle(fontSize: 18)),
-                ),
-              ],
-            ),
-          ),
-          if (showCamera.value && cameraController.value != null)
-            _CameraOverlay(
-              controller: cameraController.value!,
-              onImageCaptured: processImage,
-              onClose: () {
-                showCamera.value = false;
-                cameraController.value?.dispose();
-                cameraController.value = null;
-              },
-            ),
-        ],
+              ),
+
+            // Scanner Preview (not full screen)
+            if (showScanner.value && cameraController.value != null)
+              _ScannerPreview(
+                controller: cameraController.value!,
+                onTextDetected: processScannedText,
+                onClose: () {
+                  showScanner.value = false;
+                  cameraController.value?.dispose();
+                  cameraController.value = null;
+                },
+              ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _CameraOverlay extends StatelessWidget {
+class _ScannerPreview extends StatefulWidget {
   final CameraController controller;
-  final Function(XFile) onImageCaptured;
+  final Function(String) onTextDetected;
   final VoidCallback onClose;
 
-  const _CameraOverlay({
+  const _ScannerPreview({
     required this.controller,
-    required this.onImageCaptured,
+    required this.onTextDetected,
     required this.onClose,
   });
 
   @override
+  State<_ScannerPreview> createState() => _ScannerPreviewState();
+}
+
+class _ScannerPreviewState extends State<_ScannerPreview> {
+  final textRecognizer = TextRecognizer();
+  bool isProcessing = false;
+
+  @override
+  void dispose() {
+    textRecognizer.close();
+    super.dispose();
+  }
+
+  Future<void> _processCameraImage() async {
+    if (isProcessing) return;
+    isProcessing = true;
+
+    try {
+      final image = await widget.controller.takePicture();
+      final inputImage = InputImage.fromFilePath(image.path);
+      final recognizedText = await textRecognizer.processImage(inputImage);
+      
+      // Look for voucher pattern *104*<digits>#
+      final voucherPattern = RegExp(r'\*104\*\d{12,16}\#');
+      final match = voucherPattern.firstMatch(recognizedText.text);
+      
+      if (match != null) {
+        widget.onTextDetected(match.group(0)!);
+      } else {
+        // If no *104* pattern found, look for standalone 12-16 digit numbers
+        final digitPattern = RegExp(r'\b\d{12,16}\b');
+        final digitMatch = digitPattern.firstMatch(recognizedText.text);
+        if (digitMatch != null) {
+          widget.onTextDetected(digitMatch.group(0)!);
+        }
+      }
+    } catch (e) {
+      widget.onClose();
+    } finally {
+      isProcessing = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Stack(
+    return Column(
       children: [
-        Positioned.fill(
-          child: CameraPreview(controller),
-        ),
-        Positioned(
-          top: 40,
-          right: 20,
-          child: IconButton(
-            icon: const Icon(Icons.close, color: Colors.white, size: 30),
-            onPressed: onClose,
+        const Text('Align voucher number within frame', 
+          style: TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 10),
+        Container(
+          height: 120,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.blue, width: 2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: CameraPreview(widget.controller),
           ),
         ),
-        Positioned(
-          bottom: 40,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                shape: const CircleBorder(),
-                padding: const EdgeInsets.all(20),
-              ),
-              onPressed: () async {
-                final messenger = ScaffoldMessenger.of(context);
-                try {
-                  final image = await controller.takePicture();
-                  await onImageCaptured(image);
-                } catch (e) {
-                  messenger.showSnackBar(
-                    SnackBar(content: Text('Failed to capture image: $e')),
-                  );
-                }
-              },
-              child: const Icon(Icons.camera, size: 30),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.close, size: 30),
+              onPressed: widget.onClose,
             ),
-          ),
-        ),
-        Positioned(
-          bottom: 120,
-          left: 0,
-          right: 0,
-          child: const Center(
-            child: Text(
-              'Position the voucher number in the frame',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+            const SizedBox(width: 20),
+            IconButton(
+              icon: const Icon(Icons.camera_alt, size: 30),
+              onPressed: _processCameraImage,
             ),
-          ),
+          ],
         ),
       ],
     );

@@ -5,7 +5,10 @@ class UssdService {
     final ussdCode = '*104*$voucherNumber#';
     final uri = Uri.parse('tel:$ussdCode');
     
-    if (!await launchUrl(uri)) {
+    if (!await launchUrl(
+      uri,
+      mode: LaunchMode.externalNonBrowserApplication,
+    )) {
       throw Exception('Could not launch USSD code');
     }
   }
