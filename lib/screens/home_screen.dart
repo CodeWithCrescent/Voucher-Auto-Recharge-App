@@ -42,7 +42,7 @@ class HomeScreen extends HookWidget {
       // Extract voucher number after *104* pattern
       final regex = RegExp(r'(?:\*104\*|\b)(\d{12,16})(?:\#|\b)');
       final match = regex.firstMatch(text);
-      
+
       if (match != null) {
         voucherController.text = match.group(1)!;
         showScanner.value = false;
@@ -59,7 +59,8 @@ class HomeScreen extends HookWidget {
         return;
       }
 
-      if (voucherController.text.length < 12 || voucherController.text.length > 16) {
+      if (voucherController.text.length < 12 ||
+          voucherController.text.length > 16) {
         errorMessage.value = 'Voucher must be 12-16 digits';
         return;
       }
@@ -200,11 +201,11 @@ class _ScannerPreviewState extends State<_ScannerPreview> {
       final image = await widget.controller.takePicture();
       final inputImage = InputImage.fromFilePath(image.path);
       final recognizedText = await textRecognizer.processImage(inputImage);
-      
+
       // Look for voucher pattern *104*<digits>#
       final voucherPattern = RegExp(r'\*104\*\d{12,16}\#');
       final match = voucherPattern.firstMatch(recognizedText.text);
-      
+
       if (match != null) {
         widget.onTextDetected(match.group(0)!);
       } else {
@@ -224,10 +225,15 @@ class _ScannerPreviewState extends State<_ScannerPreview> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final cameraAspectRatio = widget.controller.value.aspectRatio;
+
     return Column(
       children: [
-        const Text('Align voucher number within frame', 
-          style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text(
+          'Align voucher number within frame',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 10),
         Container(
           height: 100,
@@ -238,7 +244,15 @@ class _ScannerPreviewState extends State<_ScannerPreview> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(6),
-            child: CameraPreview(widget.controller),
+            child: FittedBox(
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+              child: SizedBox(
+                width: 100 * cameraAspectRatio, // maintain aspect
+                height: 100,
+                child: CameraPreview(widget.controller),
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 10),
