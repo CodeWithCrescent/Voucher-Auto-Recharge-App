@@ -145,7 +145,10 @@ class HomeScreen extends HookWidget {
               ),
               child: isLoading.value
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Recharge Now', style: TextStyle(fontSize: 16)),
+                  : const Text('Recharge Now', style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white,
+                      )),
             ),
             const SizedBox(height: 20),
 
