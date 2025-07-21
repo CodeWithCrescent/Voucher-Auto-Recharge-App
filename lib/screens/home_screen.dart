@@ -1,7 +1,9 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:tz_voucher_recharge/localizations/app_localizations.dart';
+import 'package:tz_voucher_recharge/services/ussd_service.dart';
 import 'package:tz_voucher_recharge/widgets/language_toggle.dart';
 import 'package:tz_voucher_recharge/widgets/scanner_preview.dart';
 
@@ -59,6 +61,7 @@ class HomeScreen extends HookWidget {
         showScanner.value = false;
         cameraController.value?.dispose();
         cameraController.value = null;
+        errorMessage.value = null;
       } else {
         errorMessage.value = l10n.noValidVoucher;
       }
@@ -77,7 +80,7 @@ class HomeScreen extends HookWidget {
 
       try {
         isLoading.value = true;
-        // await UssdService.rechargeVoucher(voucherController.text);
+        await UssdService.rechargeVoucher(voucherController.text);
         errorMessage.value = null;
       } catch (e) {
         errorMessage.value = '${l10n.rechargeFailed}: $e';
@@ -89,6 +92,11 @@ class HomeScreen extends HookWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
+        systemOverlayStyle: SystemUiOverlayStyle.dark.copyWith(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
         elevation: 0,
         backgroundColor: Colors.transparent,
         title: Text(

@@ -112,8 +112,8 @@ class _ScannerPreviewState extends State<ScannerPreview>
                             animation: _scanLineAnimation,
                             builder: (context, child) {
                               return Positioned(
-                                top:
-                                    _scanLineAnimation.value * (scanHeight - (scanHeight - 75)),
+                                bottom:
+                                    _scanLineAnimation.value * (scanHeight - 2),
                                 left: 0,
                                 right: 0,
                                 child: Container(

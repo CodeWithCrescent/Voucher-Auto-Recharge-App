@@ -13,10 +13,10 @@ class LanguageToggle extends StatelessWidget {
           margin: const EdgeInsets.only(right: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [
-                const Color(0xFF3498DB).withOpacity(0.1),
-                const Color(0xFF2C3E50).withOpacity(0.1),
+                Color(0xFF3498DB),
+                Color(0xFF2C3E50),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -26,12 +26,12 @@ class LanguageToggle extends StatelessWidget {
             icon: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Icon(
                 Icons.language_rounded,
-                size: 20,
+                size: 22,
                 color: Colors.white,
               ),
             ),
